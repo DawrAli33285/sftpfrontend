@@ -33,17 +33,6 @@ function parseUserAgent(ua) {
   return { raw: ua, browser: browserVersion ? `${browser} ${browserVersion}` : browser, os, deviceType };
 }
 
-/*
-  ── Enrichify Data brand palette (extracted from site HTML) ──────────────────
-  Page bg  : #ffffff / #f7f9fc  (OceanWP default light)
-  Nav bg   : white with slight shadow
-  Headings : #1a2e4a  (dark navy — OceanWP default)
-  Body text: #555e68
-  Accent   : #13c1cc  (teal — Elementor button color visible in site)
-  Btn hover: #0fa8b2
-  Footer bg: #192a3e  (dark navy strip at bottom)
-  Footer txt: #ffffff
-*/
 const C = {
   pageBg:    "#f5f7fa",
   white:     "#ffffff",
@@ -62,16 +51,17 @@ const C = {
 };
 
 export default function RegisterPage() {
-  const [step, setStep]           = useState(1);
-  const [email, setEmail]         = useState("");
-  const [password, setPassword]   = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
-  const [otp, setOtp]             = useState(["","","","","",""]);
-  const [isLoading, setLoading]   = useState(false);
-  const [resendTimer, setTimer]   = useState(0);
-  const [showPw, setShowPw]       = useState(false);
-  const [showCpw, setShowCpw]     = useState(false);
-  const [deviceInfo, setDevice]   = useState(null);
+  const [step, setStep]               = useState(1);
+  const [email, setEmail]             = useState("");
+  const [password, setPassword]       = useState("");
+  const [confirmPw, setConfirmPw]     = useState("");
+  const [otp, setOtp]                 = useState(["","","","","",""]);
+  const [isLoading, setLoading]       = useState(false);
+  const [resendTimer, setTimer]       = useState(0);
+  const [showPw, setShowPw]           = useState(false);
+  const [showCpw, setShowCpw]         = useState(false);
+  const [deviceInfo, setDevice]       = useState(null);
+  const [focusedInput, setFocusedInput] = useState(null); // ← KEY FIX
   const otpRefs = useRef([]);
 
   useEffect(() => {
@@ -162,22 +152,21 @@ export default function RegisterPage() {
 
   const str = getStrength();
 
-  // ── Input styles matching Elementor form inputs on the site ────────────────
-  const inputBase = {
+  // ── KEY FIX: state-driven input styles instead of direct DOM mutation ──────
+  const inputStyle = (id, extraStyle = {}) => ({
     width: "100%", boxSizing: "border-box",
     background: C.inputBg,
-    border: `1px solid ${C.border}`,
+    border: `1px solid ${focusedInput === id ? C.teal : C.border}`,
+    boxShadow: focusedInput === id ? `0 0 0 3px rgba(19,193,204,.12)` : "none",
     color: C.navy,
     borderRadius: 6,
     fontSize: 14,
     fontFamily: "inherit",
     outline: "none",
     transition: "border-color .2s, box-shadow .2s",
-  };
-  const onFocus = e => { e.target.style.borderColor = C.teal; e.target.style.boxShadow = `0 0 0 3px rgba(19,193,204,.12)`; };
-  const onBlur  = e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = "none"; };
+    ...extraStyle,
+  });
 
-  // ── Enrichify-style teal button (matches .elementor-button on site) ────────
   const tealBtn = {
     background: `linear-gradient(135deg, ${C.teal}, ${C.tealDk})`,
     color: "#ffffff",
@@ -209,17 +198,16 @@ export default function RegisterPage() {
 
       <ToastContainer containerId={REGISTER_CONTAINER_ID} position="top-right" autoClose={3000} newestOnTop closeOnClick pauseOnHover draggable theme="light" />
 
-      {/* ── Top nav bar — matching Enrichify header ── */}
+      {/* ── Header ── */}
       <header style={{ background: C.white, borderBottom: `1px solid ${C.border}`, padding: "0 32px", height: 70, display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 6px rgba(0,0,0,.06)" }}>
         <img src="./logo.jpeg" alt="Enrichify Data" style={{ height: 40, objectFit: "contain" }} />
-        <Link to="/login" style={{ textDecoration: "none" }}>
-          <button style={{ ...tealBtn, padding: "9px 22px", fontSize: 13 }}>Sign In</button>
+        <Link to="/login" style={{ ...tealBtn, padding: "9px 22px", fontSize: 13, textDecoration: "none", display: "inline-block" }}>
+          Sign In
         </Link>
       </header>
 
       {/* ── Hero strip ── */}
       <div style={{ background: `linear-gradient(135deg, ${C.navy} 0%, #1e3a5f 60%, #15505a 100%)`, padding: "40px 24px 36px", textAlign: "center", position: "relative", overflow: "hidden" }}>
-        {/* decorative circles */}
         <div style={{ position: "absolute", top: -60, right: -60, width: 280, height: 280, borderRadius: "50%", background: "rgba(19,193,204,.08)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: -80, left: -40, width: 220, height: 220, borderRadius: "50%", background: "rgba(19,193,204,.06)", pointerEvents: "none" }} />
         <p style={{ color: C.teal, fontSize: 12, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", margin: "0 0 10px" }}>Get Started Today</p>
@@ -227,7 +215,7 @@ export default function RegisterPage() {
         <p style={{ color: "rgba(255,255,255,.65)", fontSize: 15, margin: 0 }}>Join thousands of teams enriching their data with Enrichify</p>
       </div>
 
-      {/* ── Card (pulled up to overlap hero) ── */}
+      {/* ── Card ── */}
       <div style={{ flex: 1, display: "flex", justifyContent: "center", padding: "32px 16px 48px" }}>
         <div style={{ width: "100%", maxWidth: 480 }}>
 
@@ -288,9 +276,13 @@ export default function RegisterPage() {
                       <FieldIcon>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                       </FieldIcon>
-                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com"
-                        style={{ ...inputBase, padding: "11px 14px 11px 40px" }}
-                        onFocus={onFocus} onBlur={onBlur} />
+                      <input
+                        type="email" value={email} onChange={e => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        style={inputStyle("email", { padding: "11px 14px 11px 40px" })}
+                        onFocus={() => setFocusedInput("email")}
+                        onBlur={() => setFocusedInput(null)}
+                      />
                     </div>
                   </div>
 
@@ -303,23 +295,27 @@ export default function RegisterPage() {
                       <FieldIcon>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                       </FieldIcon>
-                      <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters"
-                        style={{ ...inputBase, padding: "11px 42px 11px 40px" }}
-                        onFocus={onFocus} onBlur={onBlur} />
+                      <input
+                        type={showPw ? "text" : "password"} value={password}
+                        onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters"
+                        style={inputStyle("password", { padding: "11px 42px 11px 40px" })}
+                        onFocus={() => setFocusedInput("password")}
+                        onBlur={() => setFocusedInput(null)}
+                      />
                       <button onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: C.muted, padding: 0, display: "flex" }}>
                         {showPw ? <EyeOff /> : <EyeOpen />}
                       </button>
                     </div>
-                    {password && (
-                      <div style={{ marginTop: 8 }}>
-                        <div style={{ display: "flex", gap: 4 }}>
-                          {[1,2,3,4].map(i => (
-                            <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: ["","25%","50%","75%","100%"].indexOf(str.width) >= i ? str.color : C.border, transition: "background .3s" }} />
-                          ))}
-                        </div>
-                        <p style={{ fontSize: 11, marginTop: 4, color: str.color, fontWeight: 600 }}>{str.label} password</p>
-                      </div>
-                    )}
+                    {password && (focusedInput === "password" || focusedInput === "confirmPw") && (
+  <div style={{ marginTop: 8 }}>
+    <div style={{ display: "flex", gap: 4 }}>
+      {[1,2,3,4].map(i => (
+        <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: ["","25%","50%","75%","100%"].indexOf(str.width) >= i ? str.color : C.border, transition: "background .3s" }} />
+      ))}
+    </div>
+    <p style={{ fontSize: 11, marginTop: 4, color: str.color, fontWeight: 600 }}>{str.label} password</p>
+  </div>
+)}
                   </div>
 
                   {/* Confirm Password */}
@@ -331,9 +327,16 @@ export default function RegisterPage() {
                       <FieldIcon>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                       </FieldIcon>
-                      <input type={showCpw ? "text" : "password"} value={confirmPw} onChange={e => setConfirmPw(e.target.value)} placeholder="Re-enter password"
-                        style={{ ...inputBase, padding: "11px 42px 11px 40px", borderColor: confirmPw && password !== confirmPw ? C.danger : C.border }}
-                        onFocus={onFocus} onBlur={onBlur} />
+                      <input
+                        type={showCpw ? "text" : "password"} value={confirmPw}
+                        onChange={e => setConfirmPw(e.target.value)} placeholder="Re-enter password"
+                        style={inputStyle("confirmPw", {
+                          padding: "11px 42px 11px 40px",
+                          borderColor: confirmPw && password !== confirmPw ? C.danger : undefined,
+                        })}
+                        onFocus={() => setFocusedInput("confirmPw")}
+                        onBlur={() => setFocusedInput(null)}
+                      />
                       <button onClick={() => setShowCpw(!showCpw)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: C.muted, padding: 0, display: "flex" }}>
                         {showCpw ? <EyeOff /> : <EyeOpen />}
                       </button>
@@ -381,14 +384,15 @@ export default function RegisterPage() {
                           type="text" inputMode="numeric" maxLength={1} value={digit}
                           onChange={e => handleOtpChange(i, e.target.value)}
                           onKeyDown={e => handleKeyDown(i, e)}
-                          onFocus={e => { e.target.select(); e.target.style.borderColor = C.teal; e.target.style.boxShadow = `0 0 0 3px rgba(19,193,204,.15)`; e.target.style.background = C.white; }}
-                          onBlur={e => { e.target.style.borderColor = digit ? C.teal : C.border; e.target.style.boxShadow = "none"; }}
+                          onFocus={e => { e.target.select(); setFocusedInput(`otp-${i}`); }}
+                          onBlur={() => setFocusedInput(null)}
                           style={{
                             width: 46, height: 54, textAlign: "center",
                             fontSize: 22, fontWeight: 700,
                             borderRadius: 8, outline: "none",
                             background: digit ? C.white : C.inputBg,
-                            border: `2px solid ${digit ? C.teal : C.border}`,
+                            border: `2px solid ${focusedInput === `otp-${i}` ? C.teal : digit ? C.teal : C.border}`,
+                            boxShadow: focusedInput === `otp-${i}` ? `0 0 0 3px rgba(19,193,204,.15)` : "none",
                             color: C.navy,
                             transition: "border-color .2s, box-shadow .2s, background .2s",
                             fontFamily: "inherit",
@@ -429,14 +433,17 @@ export default function RegisterPage() {
           {/* Sign in link */}
           <p style={{ textAlign: "center", fontSize: 14, color: C.bodyText, marginTop: 20 }}>
             Already have an account?{" "}
-            <Link to="/login" style={{ color: C.teal, fontWeight: 700, textDecoration: "none" }}
+            <Link
+              to="/login"
+              style={{ color: C.teal, fontWeight: 700, textDecoration: "none" }}
               onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-              onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}>
+              onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+            >
               Sign In
             </Link>
           </p>
 
-          {/* Footer strip — matches site footer style */}
+          {/* Footer strip */}
           <div style={{ marginTop: 28, background: C.footerBg, borderRadius: 10, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
             <span style={{ fontSize: 12, color: "rgba(255,255,255,.5)" }}>© 2026 Enrichify Data. All rights reserved.</span>
             <a href="/privacy-policy/" style={{ fontSize: 12, color: C.teal, textDecoration: "none", fontWeight: 600 }}>Privacy Policy</a>

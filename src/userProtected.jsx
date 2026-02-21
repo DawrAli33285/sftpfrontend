@@ -3,7 +3,7 @@ import { Navigate, Outlet } from "react-router-dom";
 
 const UserRoute = () => {
   // Get the token from localStorage
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("authToken");
 
   // If token is missing or empty, redirect to login
   if (!token || token === "") {
