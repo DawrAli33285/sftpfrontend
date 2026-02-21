@@ -7,7 +7,6 @@ import { BASE_URL } from './baseurl';
 
 const TOAST_ID = "adminRegister";
 
-// ── Enrichify Data brand palette ─────────────────────────────────────────
 const C = {
   pageBg:   "#f5f7fa",
   white:    "#ffffff",
@@ -30,6 +29,7 @@ export default function SuperAdminRegister() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [focusedInput, setFocusedInput] = useState(null); // ← KEY FIX
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -69,16 +69,18 @@ export default function SuperAdminRegister() {
     }
   };
 
-  // ── Shared styles ─────────────────────────────────────────────────────
-  const inputBase = {
+  // ── State-driven input styles (no direct DOM mutation) ────────────────
+  const inputStyle = (name, extraStyle = {}) => ({
     width: "100%", boxSizing: "border-box",
-    background: C.inputBg, border: `1px solid ${C.border}`,
+    background: C.inputBg,
+    border: `1px solid ${errors[name] ? C.danger : focusedInput === name ? C.teal : C.border}`,
+    boxShadow: focusedInput === name ? `0 0 0 3px rgba(19,193,204,.12)` : "none",
     color: C.navy, borderRadius: 6, fontSize: 14,
     fontFamily: "inherit", outline: "none",
     transition: "border-color .2s, box-shadow .2s",
-  };
-  const onFocus = e => { e.target.style.borderColor = C.teal; e.target.style.boxShadow = `0 0 0 3px rgba(19,193,204,.12)`; };
-  const onBlur  = e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = "none"; };
+    ...extraStyle,
+  });
+
   const tealBtn = {
     background: `linear-gradient(135deg, ${C.teal}, ${C.tealDk})`,
     color: "#ffffff", border: "none", borderRadius: 6,
@@ -112,8 +114,9 @@ export default function SuperAdminRegister() {
           onChange={handleChange}
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
           placeholder={placeholder}
-          style={{ ...inputBase, padding: showToggle ? "11px 42px 11px 40px" : "11px 14px 11px 40px", borderColor: errors[name] ? C.danger : C.border }}
-          onFocus={onFocus} onBlur={onBlur}
+          style={inputStyle(name, { padding: showToggle ? "11px 42px 11px 40px" : "11px 14px 11px 40px" })}
+          onFocus={() => setFocusedInput(name)}
+          onBlur={() => setFocusedInput(null)}
         />
         {showToggle && (
           <button onClick={onToggle} type="button" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: C.muted, padding: 0, display: "flex" }}>
@@ -134,8 +137,8 @@ export default function SuperAdminRegister() {
       {/* ── Header ── */}
       <header style={{ background: C.white, borderBottom: `1px solid ${C.border}`, padding: "0 32px", height: 70, display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 6px rgba(0,0,0,.06)" }}>
         <img src="./logo.jpeg" alt="Enrichify Data" style={{ height: 40, objectFit: "contain" }} />
-        <Link to="/adminlogin" style={{ textDecoration: "none" }}>
-          <button style={{ ...tealBtn, padding: "9px 22px", fontSize: 13 }}>← Back to Login</button>
+        <Link to="/adminlogin" style={{ ...tealBtn, padding: "9px 22px", fontSize: 13, textDecoration: "none", display: "inline-block" }}>
+          ← Back to Login
         </Link>
       </header>
 
@@ -180,7 +183,6 @@ export default function SuperAdminRegister() {
                 <Field label="Password" name="password" placeholder="Minimum 8 characters" showToggle showState={showPassword} onToggle={() => setShowPassword(v => !v)} />
                 <Field label="Confirm Password" name="confirmPassword" placeholder="Re-enter your password" showToggle showState={showConfirmPassword} onToggle={() => setShowConfirmPassword(v => !v)} />
 
-                {/* Submit */}
                 <button
                   onClick={handleSubmit} disabled={isLoading}
                   style={{ ...tealBtn, width: "100%", padding: "13px 0", marginTop: 4, opacity: isLoading ? .7 : 1 }}
@@ -192,7 +194,6 @@ export default function SuperAdminRegister() {
                 </button>
               </div>
 
-              {/* Terms note */}
               <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${C.border}`, textAlign: "center" }}>
                 <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
                   🔒 By registering, you agree to our terms and conditions.
@@ -204,9 +205,12 @@ export default function SuperAdminRegister() {
           {/* Already have account */}
           <p style={{ textAlign: "center", fontSize: 14, color: C.bodyText, marginTop: 20 }}>
             Already have an account?{" "}
-            <Link to="/adminlogin" style={{ color: C.teal, fontWeight: 700, textDecoration: "none" }}
+            <Link
+              to="/adminlogin"
+              style={{ color: C.teal, fontWeight: 700, textDecoration: "none" }}
               onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-              onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}>
+              onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+            >
               Sign In
             </Link>
           </p>
